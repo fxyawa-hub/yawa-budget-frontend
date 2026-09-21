@@ -1,0 +1,6 @@
+{
+  "name": "Yawa Budget",
+  "description": "Developer portfolio and engineering showcase — full-stack systems, Java/Spring Boot services, React interfaces, and intelligent financial tools like SmartBudget.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

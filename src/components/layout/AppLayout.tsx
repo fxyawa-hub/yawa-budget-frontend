@@ -4,8 +4,7 @@ import {
   LayoutDashboard,
   Receipt,
   PieChart,
-  ArrowLeftRight,
-  Sparkles,
+  MessageSquare,
   Settings,
   LogOut,
   Sun,
@@ -31,12 +30,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   };
 
   const navItems = [
-    { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
-    { label: "Transactions", to: "/transactions", icon: Receipt },
-    { label: "Budgets", to: "/budgets", icon: PieChart },
-    { label: "Transfers", to: "/transfers", icon: ArrowLeftRight },
-    { label: "Ask", to: "/ask", icon: Sparkles },
-    { label: "Settings", to: "/settings", icon: Settings },
+    { label: "Dashboard", shortLabel: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
+    { label: "Transactions", shortLabel: "Transactions", to: "/transactions", icon: Receipt },
+    { label: "Budgets", shortLabel: "Budgets", to: "/budgets", icon: PieChart },
+    { label: "Ask Yawa Budget", shortLabel: "Ask", to: "/ask", icon: MessageSquare },
+    { label: "Settings", shortLabel: "Settings", to: "/settings", icon: Settings },
   ];
 
   return (
@@ -45,18 +43,12 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       <header className="sticky top-0 z-40 bg-[var(--bg-surface)] border-b border-[var(--border-color)]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
-            {/* Logo and Portfolio return link */}
+            {/* Logo */}
             <div className="flex items-center gap-3">
               <NavLink to="/dashboard" className="flex items-center gap-2">
                 <span className="font-sans text-base font-bold tracking-tight text-[var(--text-primary)]">
                   Yawa Budget
                 </span>
-              </NavLink>
-              <NavLink
-                to="/"
-                className="text-xs font-mono text-[var(--text-muted)] hover:text-[#C9F24D] transition-colors border-l border-[var(--border-color)] pl-3"
-              >
-                ← Portfolio
               </NavLink>
             </div>
 
@@ -160,7 +152,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             >
               <Icon className="w-4 h-4 mb-0.5" />
               <span className="text-[10px] font-mono tracking-tight leading-none">
-                {item.label}
+                {item.shortLabel}
               </span>
 
               {/* Single continuous sliding indicator on mobile */}

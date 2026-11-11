@@ -6,7 +6,7 @@ import { Button } from "../components/common/Button";
 import { ErrorAlert } from "../components/common/ErrorAlert";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
-import { getErrorMessage } from "../api/client";
+import { getErrorMessage } from "../api";
 
 export const RegisterPage: React.FC = () => {
   const { register } = useAuth();

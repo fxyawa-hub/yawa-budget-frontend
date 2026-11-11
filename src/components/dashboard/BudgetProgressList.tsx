@@ -4,9 +4,13 @@ import { BudgetSummaryCategory } from "../../types";
 
 interface BudgetProgressListProps {
   categories: BudgetSummaryCategory[];
+  hideBalances?: boolean;
 }
 
-export const BudgetProgressList: React.FC<BudgetProgressListProps> = ({ categories }) => {
+export const BudgetProgressList: React.FC<BudgetProgressListProps> = ({
+  categories,
+  hideBalances = false,
+}) => {
   if (!categories || categories.length === 0) {
     return (
       <div className="py-8 text-xs font-mono text-[var(--text-muted)]">
@@ -40,13 +44,13 @@ export const BudgetProgressList: React.FC<BudgetProgressListProps> = ({ categori
                 )}
               </div>
 
-              <div className="text-right shrink-0 font-mono text-xs text-[var(--text-secondary)] tracking-tight">
+              <div className="text-right shrink-0 font-mono text-xs text-[var(--text-secondary)] tracking-tight tabular-nums">
                 <span className={isAlert ? "text-[var(--alert-red)] font-semibold" : "text-[var(--text-primary)]"}>
-                  ${cat.spent.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {hideBalances ? "₦••••••" : `₦${cat.spent.toLocaleString()}`}
                 </span>
                 <span className="text-[var(--text-muted)] mx-1.5">/</span>
                 <span className="text-[var(--text-secondary)]">
-                  ${cat.budgeted.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {hideBalances ? "₦••••••" : `₦${cat.budgeted.toLocaleString()}`}
                 </span>
               </div>
             </div>

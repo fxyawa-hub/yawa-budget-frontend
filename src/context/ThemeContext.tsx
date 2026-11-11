@@ -8,13 +8,12 @@ interface ThemeContextType {
 }
 
 const THEME_STORAGE_KEY = "yawabudget_theme_preference";
-const LEGACY_THEME_KEY = "smartbudget_theme_preference";
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>(() => {
-    const saved = localStorage.getItem(THEME_STORAGE_KEY) || localStorage.getItem(LEGACY_THEME_KEY);
+    const saved = localStorage.getItem(THEME_STORAGE_KEY);
     if (saved === "light" || saved === "dark") {
       return saved;
     }

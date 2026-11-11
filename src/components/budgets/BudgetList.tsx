@@ -61,8 +61,8 @@ export const BudgetList: React.FC<BudgetListProps> = ({
         </div>
         <div className="text-xs font-mono text-[var(--text-secondary)] border border-[var(--border-color)] bg-[var(--bg-base)] px-2.5 py-1 self-start sm:self-auto">
           total planned:{" "}
-          <span className="font-sans font-bold text-[var(--text-primary)] tabular-nums ml-1">
-            ${totalBudgeted.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          <span className="font-mono font-bold text-[var(--text-primary)] tabular-nums ml-1">
+            ₦{totalBudgeted.toLocaleString()}
           </span>
           <span className="text-[var(--text-muted)]"> / mo</span>
         </div>
@@ -86,8 +86,8 @@ export const BudgetList: React.FC<BudgetListProps> = ({
             </div>
 
             <div className="text-right shrink-0">
-              <span className="font-sans text-sm sm:text-base font-bold tabular-nums text-[var(--text-primary)]">
-                ${budget.monthlyLimit.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              <span className="font-mono text-sm sm:text-base font-semibold tabular-nums text-[var(--text-primary)]">
+                ₦{budget.monthlyLimit.toLocaleString()}
               </span>
               <span className="text-xs font-mono text-[var(--text-muted)] block">/ month</span>
             </div>

@@ -40,7 +40,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
       <div className="border border-[var(--border-color)] bg-[var(--bg-surface)] p-4">
         <EmptyState
           title="No transactions recorded"
-          description="You have not added any expenses yet. Use the form above to record your first ledger entry."
+          description="You have not added any expenses yet. Record a manual entry above to get started."
           icon={<Receipt className="w-4 h-4" />}
         />
       </div>
@@ -48,7 +48,10 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   }
 
   return (
-    <div id="transactions-history-card" className="border border-[var(--border-color)] bg-[var(--bg-surface)]">
+    <div
+      id="transactions-history-card"
+      className="border border-[var(--border-color)] bg-[var(--bg-surface)]"
+    >
       <div className="px-5 py-3.5 border-b border-[var(--border-color)] flex items-center justify-between">
         <div>
           <h3 className="text-sm font-semibold text-[var(--text-primary)]">
@@ -72,11 +75,13 @@ export const TransactionList: React.FC<TransactionListProps> = ({
               <p className="text-sm font-sans font-medium text-[var(--text-primary)] truncate">
                 {tx.description}
               </p>
+
               <div className="flex flex-wrap items-center gap-2 mt-1">
                 <span className="font-mono text-[11px] text-[var(--text-secondary)] flex items-center gap-1">
                   <Calendar className="w-3 h-3 text-[var(--text-muted)]" />
                   {tx.date}
                 </span>
+
                 <Badge variant="neutral" size="sm">
                   {tx.category}
                 </Badge>
@@ -84,8 +89,8 @@ export const TransactionList: React.FC<TransactionListProps> = ({
             </div>
 
             <div className="text-right shrink-0 pt-0.5 sm:pt-0">
-              <span className="font-sans text-sm sm:text-base font-bold tabular-nums text-[var(--text-primary)]">
-                ${tx.amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              <span className="font-mono text-sm sm:text-base font-semibold tabular-nums text-[var(--text-primary)]">
+                ₦{tx.amount.toLocaleString()}
               </span>
             </div>
           </div>

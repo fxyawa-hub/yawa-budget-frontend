@@ -4,7 +4,7 @@ import { Button } from "../common/Button";
 import { Modal } from "../common/Modal";
 import { ErrorAlert } from "../common/ErrorAlert";
 import { useAuth } from "../../context/AuthContext";
-import { getErrorMessage } from "../../api/client";
+import { getErrorMessage } from "../../api";
 
 export const DeleteAccountSection: React.FC = () => {
   const { deleteAccount, user } = useAuth();

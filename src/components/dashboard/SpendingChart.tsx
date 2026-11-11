@@ -12,9 +12,10 @@ import { BudgetSummaryCategory } from "../../types";
 
 interface SpendingChartProps {
   categories: BudgetSummaryCategory[];
+  hideBalances?: boolean;
 }
 
-export const SpendingChart: React.FC<SpendingChartProps> = ({ categories }) => {
+export const SpendingChart: React.FC<SpendingChartProps> = ({ categories, hideBalances = false }) => {
   if (!categories || categories.length === 0) {
     return (
       <div className="h-48 flex items-center justify-center text-xs font-mono text-[var(--text-muted)]">
@@ -40,7 +41,7 @@ export const SpendingChart: React.FC<SpendingChartProps> = ({ categories }) => {
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={chartData}
-          margin={{ top: 8, right: 0, left: -20, bottom: 20 }}
+          margin={{ top: 8, right: 0, left: -10, bottom: 20 }}
         >
           <XAxis
             dataKey="name"
@@ -54,7 +55,7 @@ export const SpendingChart: React.FC<SpendingChartProps> = ({ categories }) => {
           />
           <YAxis
             tick={{ fill: "var(--text-secondary)", fontSize: 10, fontFamily: "var(--font-mono)" }}
-            tickFormatter={(val) => `$${val}`}
+            tickFormatter={(val) => (hideBalances ? "₦••" : `₦${(val / 1000).toFixed(0)}k`)}
             axisLine={{ stroke: "var(--border-color)" }}
             tickLine={false}
           />
@@ -68,11 +69,11 @@ export const SpendingChart: React.FC<SpendingChartProps> = ({ categories }) => {
                     <p className="font-sans font-medium text-[var(--text-primary)] mb-1">
                       {data.name}
                     </p>
-                    <p className="text-[var(--text-secondary)] font-mono text-[11px]">
-                      Spent: ${data.Spent.toFixed(2)}
+                    <p className="text-[var(--text-secondary)] font-mono text-[11px] tabular-nums">
+                      Spent: {hideBalances ? "₦••••••" : `₦${data.Spent.toLocaleString()}`}
                     </p>
-                    <p className="text-[var(--text-secondary)] font-mono text-[11px]">
-                      Limit: ${data.Budgeted.toFixed(2)}
+                    <p className="text-[var(--text-secondary)] font-mono text-[11px] tabular-nums">
+                      Limit: {hideBalances ? "₦••••••" : `₦${data.Budgeted.toLocaleString()}`}
                     </p>
                     <p
                       className={`font-mono text-[11px] mt-1 ${

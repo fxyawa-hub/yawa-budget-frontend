@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { getBudgetsApi, setBudgetApi } from "../api/budgets";
+import { getBudgetsApi, setBudgetApi, getErrorMessage } from "../api";
 import { Budget, SetBudgetPayload } from "../types";
 import { BudgetForm } from "../components/budgets/BudgetForm";
 import { BudgetList } from "../components/budgets/BudgetList";
-import { getErrorMessage } from "../api/client";
 
 const STANDARD_CATEGORIES = [
   "Groceries",

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Sparkles, User as UserIcon, Volume2, Square } from "lucide-react";
+import { MessageSquare, User as UserIcon, Volume2, Square } from "lucide-react";
 import { ChatMessageItem } from "../../types";
 
 interface ChatMessageProps {
@@ -30,7 +30,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       return;
     }
 
-    window.speechSynthesis.cancel(); // Cancel any existing speech
+    window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(message.text);
     utterance.rate = 1.0;
     utterance.pitch = 1.0;
@@ -54,7 +54,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
             : "border-[var(--border-color)] bg-[var(--bg-surface)] text-[var(--text-secondary)]"
         }`}
       >
-        {isAssistant ? <Sparkles className="w-3.5 h-3.5" /> : <UserIcon className="w-3.5 h-3.5" />}
+        {isAssistant ? <MessageSquare className="w-3.5 h-3.5" /> : <UserIcon className="w-3.5 h-3.5" />}
       </div>
 
       <div
@@ -75,7 +75,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
                 onClick={handleToggleSpeech}
                 title={isSpeaking ? "Stop speaking" : "Read aloud (Text to Speech)"}
                 aria-label={isSpeaking ? "Stop speaking" : "Read answer aloud"}
-                className={`p-1 rounded-xs transition-colors border ${
+                className={`p-1 rounded-xs transition-colors border cursor-pointer ${
                   isSpeaking
                     ? "border-[var(--accent-lime)] text-[var(--accent-lime-text)] dark:text-[var(--accent-lime)] bg-[var(--accent-lime-subtle)]"
                     : "border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--border-color)]"

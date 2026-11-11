@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { User, LoginPayload, RegisterPayload } from "../types";
-import { loginApi, registerApi, deleteAccountApi } from "../api/auth";
-import { TOKEN_STORAGE_KEY, USER_STORAGE_KEY } from "../api/client";
+import { loginApi, registerApi, deleteAccountApi, TOKEN_STORAGE_KEY, USER_STORAGE_KEY } from "../api";
 
 interface AuthContextType {
   user: User | null;
@@ -37,12 +36,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     window.addEventListener("yawabudget:unauthorized", handleUnauthorized);
-    window.addEventListener("smartbudget:unauthorized", handleUnauthorized);
     setIsLoading(false);
 
     return () => {
       window.removeEventListener("yawabudget:unauthorized", handleUnauthorized);
-      window.removeEventListener("smartbudget:unauthorized", handleUnauthorized);
     };
   }, []);
 

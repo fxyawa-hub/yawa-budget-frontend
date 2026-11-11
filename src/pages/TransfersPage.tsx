@@ -5,8 +5,7 @@ import { SendMoneyForm } from "../components/paystack/SendMoneyForm";
 import { TransferHistoryList } from "../components/paystack/TransferHistoryList";
 import { TransferReceiptModal } from "../components/paystack/TransferReceiptModal";
 import { PaystackTransferResult } from "../types";
-import { getPaystackTransfersApi } from "../api/paystack";
-import { getErrorMessage } from "../api/client";
+import { getTransferHistoryApi as getPaystackTransfersApi, getErrorMessage } from "../api";
 
 export const TransfersPage: React.FC = () => {
   const navigate = useNavigate();

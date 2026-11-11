@@ -4,9 +4,10 @@ import { BudgetSummaryResponse } from "../../types";
 
 interface DashboardHeroProps {
   summary: BudgetSummaryResponse;
+  hideBalances?: boolean;
 }
 
-export const DashboardHero: React.FC<DashboardHeroProps> = ({ summary }) => {
+export const DashboardHero: React.FC<DashboardHeroProps> = ({ summary, hideBalances = false }) => {
   const isOverBudget = summary.totalRemaining < 0;
 
   return (
@@ -17,8 +18,8 @@ export const DashboardHero: React.FC<DashboardHeroProps> = ({ summary }) => {
       </p>
 
       {/* Very large hero figure, heavy weight, top-left, dominant */}
-      <div className="font-sans text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-[var(--text-primary)] leading-none">
-        <HeroCounter value={summary.totalSpent} duration={900} />
+      <div className="font-mono text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-[var(--text-primary)] leading-none tabular-nums">
+        <HeroCounter value={summary.totalSpent} duration={900} masked={hideBalances} />
       </div>
 
       {/* Accent marker for the hero figure */}
@@ -31,15 +32,21 @@ export const DashboardHero: React.FC<DashboardHeroProps> = ({ summary }) => {
         <span>
           remaining:{" "}
           <span className={isOverBudget ? "text-[var(--alert-red)] font-semibold" : "text-[var(--text-primary)]"}>
-            {isOverBudget ? "-" : ""}${Math.abs(summary.totalRemaining).toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
+            {hideBalances ? (
+              "₦••••••"
+            ) : (
+              <>
+                {isOverBudget ? "-" : ""}₦{Math.abs(summary.totalRemaining).toLocaleString()}
+              </>
+            )}
           </span>{" "}
-          of ${summary.totalBudget.toLocaleString("en-US", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })} limit
+          of{" "}
+          {hideBalances ? (
+            "₦••••••"
+          ) : (
+            `₦${summary.totalBudget.toLocaleString()}`
+          )}{" "}
+          limit
         </span>
         <span className="text-[var(--border-strong)]">/</span>
         <span>{summary.overallPercentage}% utilized</span>

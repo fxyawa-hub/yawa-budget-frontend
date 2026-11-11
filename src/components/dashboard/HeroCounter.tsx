@@ -2,10 +2,15 @@ import React, { useEffect, useState } from "react";
 
 interface HeroCounterProps {
   value: number;
-  duration?: number; // ~900ms as required
+  duration?: number;
+  masked?: boolean;
 }
 
-export const HeroCounter: React.FC<HeroCounterProps> = ({ value, duration = 900 }) => {
+export const HeroCounter: React.FC<HeroCounterProps> = ({
+  value,
+  duration = 900,
+  masked = false,
+}) => {
   const [displayValue, setDisplayValue] = useState<number>(0);
 
   useEffect(() => {
@@ -15,8 +20,6 @@ export const HeroCounter: React.FC<HeroCounterProps> = ({ value, duration = 900 
     const step = (timestamp: number) => {
       if (!startTimestamp) startTimestamp = timestamp;
       const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-
-      // Ease-out cubic formula
       const easeOut = 1 - Math.pow(1 - progress, 3);
       setDisplayValue(easeOut * value);
 
@@ -28,18 +31,16 @@ export const HeroCounter: React.FC<HeroCounterProps> = ({ value, duration = 900 
     };
 
     animationFrameId = requestAnimationFrame(step);
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-    };
+    return () => cancelAnimationFrame(animationFrameId);
   }, [value, duration]);
 
+  if (masked) {
+    return <span className="tabular-nums font-mono tracking-wider">₦••••••</span>;
+  }
+
   return (
-    <span className="tabular-nums font-sans">
-      ${displayValue.toLocaleString("en-US", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}
+    <span className="tabular-nums font-mono">
+      ₦{Math.round(displayValue).toLocaleString()}
     </span>
   );
 };

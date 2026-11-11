@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Plus, DollarSign, Tag, Check } from "lucide-react";
+import { Plus, Tag, Check } from "lucide-react";
 import { Input } from "../common/Input";
 import { Button } from "../common/Button";
 import { ErrorAlert } from "../common/ErrorAlert";
@@ -32,7 +32,7 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ categories, onSubmitBudg
       return;
     }
 
-    const limit = parseFloat(monthlyLimit);
+    const limit = parseFloat(monthlyLimit.replace(/,/g, ""));
     if (isNaN(limit) || limit < 0) {
       setError("Please enter a valid monthly limit (0 or greater).");
       return;
@@ -45,13 +45,13 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ categories, onSubmitBudg
         monthlyLimit: limit,
       });
 
-      setSuccessMessage(`Monthly limit for "${finalCategory}" set to $${limit.toFixed(2)}.`);
+      setSuccessMessage(`Monthly limit for "${finalCategory}" set to ₦${limit.toLocaleString()}.`);
       setMonthlyLimit("");
       if (isCustom) {
         setCustomCategory("");
         setIsCustom(false);
       }
-    } catch (err) {
+    } catch {
       setError("Failed to save budget limit. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -65,7 +65,7 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ categories, onSubmitBudg
           Set category limit
         </h3>
         <p className="text-xs font-mono text-[var(--text-muted)] mt-0.5">
-          Establish monthly limits to govern dashboard alerts and spending ratios
+          Establish monthly limits in naira to govern alerts and spending ratios
         </p>
       </div>
 
@@ -133,14 +133,14 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ categories, onSubmitBudg
           {/* Monthly Limit Input */}
           <Input
             id="budget-limit-input"
-            label="Monthly limit ($)"
+            label="Monthly limit (₦)"
             type="number"
-            step="1"
+            step="100"
             min="0"
-            placeholder="e.g. 400"
+            placeholder="e.g. 50000"
             value={monthlyLimit}
             onChange={(e) => setMonthlyLimit(e.target.value)}
-            leftIcon={<DollarSign className="w-3.5 h-3.5" />}
+            className="tabular-nums font-mono"
             required
           />
 

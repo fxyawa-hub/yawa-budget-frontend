@@ -1,58 +1,59 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Send, Mic, MicOff } from "lucide-react";
+import { Send, Mic } from "lucide-react";
 import { Button } from "../common/Button";
 
 interface ChatInputProps {
   onSendMessage: (text: string) => Promise<void>;
   isLoading: boolean;
+  onMicrophoneError?: (errorText: string | null) => void;
 }
 
-export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
+export const ChatInput: React.FC<ChatInputProps> = ({
+  onSendMessage,
+  isLoading,
+  onMicrophoneError,
+}) => {
   const [prompt, setPrompt] = useState<string>("");
   const [isListening, setIsListening] = useState<boolean>(false);
-
   const recognitionRef = useRef<any>(null);
-  const transcriptRef = useRef<string>("");
+  const currentTranscriptRef = useRef<string>("");
 
-  // Check browser support for SpeechRecognition or webkitSpeechRecognition
+  // Check browser speech support
   const isSpeechSupported =
     typeof window !== "undefined" &&
     Boolean((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
 
-  const quickQuestions = [
-    "Any yawa with my budget this month?",
-    "Which categories are past 80% limit?",
-    "Total spent this month",
-    "Where can I cut back?",
+  const sampleQuestions = [
+    "How much have I spent on food?",
+    "Am I close to any limit?",
+    "Where can I cut ₦10,000?",
   ];
 
-  // Clean up any ongoing recognition on unmount
+  // Stop recognition on unmount
   useEffect(() => {
     return () => {
       if (recognitionRef.current) {
         try {
           recognitionRef.current.abort();
-        } catch {
-          // Ignored
-        }
+        } catch {}
       }
     };
   }, []);
 
   const toggleListening = () => {
-    if (!isSpeechSupported || isLoading) return;
+    if (isLoading || !isSpeechSupported) return;
 
+    // If currently listening, tap again to stop and send
     if (isListening) {
-      // User tapped mic to stop speaking -> trigger stop which will fire onend and send message
       if (recognitionRef.current) {
         try {
           recognitionRef.current.stop();
-        } catch {
-          setIsListening(false);
-        }
+        } catch {}
       }
       return;
     }
+
+    onMicrophoneError?.(null);
 
     const SpeechRecognitionClass =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -61,45 +62,59 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }
     try {
       const recognition = new SpeechRecognitionClass();
       recognitionRef.current = recognition;
-      recognition.continuous = false; // Automatically stops when user stops speaking
-      recognition.interimResults = true;
-      recognition.lang = navigator.language || "en-US";
 
-      transcriptRef.current = "";
+      // Rule 1: Listen ONCE using webkitSpeechRecognition
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = "en-NG";
+
+      currentTranscriptRef.current = "";
 
       recognition.onstart = () => {
         setIsListening(true);
       };
 
+      // Rule 2: Text field fills with live words as user speaks
       recognition.onresult = (event: any) => {
-        let fullTranscript = "";
+        let transcript = "";
         for (let i = 0; i < event.results.length; i++) {
-          fullTranscript += event.results[i][0].transcript;
+          transcript += event.results[i][0].transcript;
         }
-        setPrompt(fullTranscript);
-        transcriptRef.current = fullTranscript;
+        currentTranscriptRef.current = transcript;
+        setPrompt(transcript);
       };
 
       recognition.onerror = (event: any) => {
-        if (event.error !== "no-speech" && event.error !== "aborted") {
-          console.warn("Speech recognition error:", event.error);
+        // Fall back to "en-US" if "en-NG" is not supported
+        if (event.error === "language-not-supported" && recognition.lang !== "en-US") {
+          recognition.lang = "en-US";
+          try {
+            recognition.start();
+            return;
+          } catch {}
         }
+
+        // Rule 3: Microphone blocked handling
+        if (event.error === "not-allowed" || event.error === "permission-denied") {
+          onMicrophoneError?.("Microphone is blocked. Allow it in the address bar and try again.");
+        }
+
         setIsListening(false);
       };
 
+      // Rule 2: When user stops speaking (or taps button again), send automatically
       recognition.onend = () => {
         setIsListening(false);
-        const textToSend = transcriptRef.current.trim();
-        if (textToSend) {
+        const finalQuestion = currentTranscriptRef.current.trim();
+        if (finalQuestion) {
           setPrompt("");
-          transcriptRef.current = "";
-          onSendMessage(textToSend);
+          currentTranscriptRef.current = "";
+          onSendMessage(finalQuestion);
         }
       };
 
       recognition.start();
-    } catch (err) {
-      console.error("Failed to start speech recognition:", err);
+    } catch {
       setIsListening(false);
     }
   };
@@ -108,52 +123,49 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }
     e.preventDefault();
     if (!prompt.trim() || isLoading) return;
 
-    // If speech recognition is still running, abort to avoid duplicate onend send
-    if (recognitionRef.current && isListening) {
-      transcriptRef.current = "";
+    if (isListening && recognitionRef.current) {
       try {
         recognitionRef.current.abort();
-      } catch {
-        // Ignored
-      }
+      } catch {}
       setIsListening(false);
     }
 
     const question = prompt.trim();
     setPrompt("");
+    currentTranscriptRef.current = "";
     await onSendMessage(question);
   };
 
-  const handleSelectQuick = async (q: string) => {
-    if (isLoading) return;
+  const handleSelectSample = async (q: string) => {
+    if (isLoading || isListening) return;
     await onSendMessage(q);
   };
 
   return (
-    <div className="space-y-2.5">
-      {/* Quick Prompt Suggestions */}
+    <div className="space-y-3">
+      {/* Sample Question Chips */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
         <span className="text-[11px] font-mono text-[var(--text-muted)] shrink-0">
-          query:
+          Sample queries:
         </span>
-        {quickQuestions.map((q, idx) => (
+        {sampleQuestions.map((q, idx) => (
           <button
             key={idx}
             type="button"
             disabled={isLoading || isListening}
-            onClick={() => handleSelectQuick(q)}
-            className="text-[11px] font-mono px-2 py-0.5 rounded-xs bg-[var(--bg-base)] hover:bg-[var(--bg-muted)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-color)] shrink-0 transition-colors disabled:opacity-50"
+            onClick={() => handleSelectSample(q)}
+            className="text-[11px] font-mono px-2 py-0.5 rounded-xs bg-[var(--bg-base)] hover:bg-[var(--bg-muted)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-color)] shrink-0 transition-colors disabled:opacity-50 cursor-pointer"
           >
-            {q}
+            &ldquo;{q}&rdquo;
           </button>
         ))}
       </div>
 
       {/* Input Field Form */}
-      <form onSubmit={handleSubmit} className="space-y-2">
+      <form onSubmit={handleSubmit}>
         <div className="flex items-center gap-2">
           <input
-            id="ask-smartbudget-input"
+            id="ask-yawabudget-input"
             type="text"
             placeholder={
               isListening
@@ -163,56 +175,47 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             disabled={isLoading}
-            className={`flex-1 rounded-xs border bg-[var(--bg-base)] px-3 py-2 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] transition-colors focus:outline-none disabled:opacity-50 ${
-              isListening
-                ? "border-[var(--accent-lime)] ring-1 ring-[var(--accent-lime)] placeholder:text-[var(--accent-lime-text)] dark:placeholder:text-[var(--accent-lime)]"
-                : "border-[var(--border-color)] focus:border-[var(--text-primary)]"
-            }`}
+            className="flex-1 min-w-0 rounded-xs border border-[var(--border-color)] bg-[var(--bg-base)] px-3 py-2 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] transition-colors focus:outline-none focus:border-[var(--text-primary)] disabled:opacity-50"
           />
 
-          {/* Web Speech API Microphone Button (Hidden if browser does not support it) */}
+          {/* Rule 1 & 2: Single microphone button next to Send button */}
           {isSpeechSupported && (
             <button
               id="ask-speech-mic-btn"
               type="button"
               onClick={toggleListening}
               disabled={isLoading}
-              title={
+              title={isListening ? "Listening... Tap to send" : "Tap to speak question"}
+              aria-label={isListening ? "Listening, tap to send" : "Tap to speak"}
+              className={`h-9 px-3 text-xs font-mono rounded-xs border transition-colors shrink-0 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 select-none ${
                 isListening
-                  ? "Listening... Click to stop and send"
-                  : "Ask with voice (Speech Recognition)"
-              }
-              aria-label={isListening ? "Stop voice listening and send" : "Ask with voice"}
-              className={`h-8.5 px-2.5 rounded-xs border transition-all flex items-center justify-center shrink-0 disabled:opacity-50 select-none ${
-                isListening
-                  ? "border-[var(--accent-lime)] bg-[var(--accent-lime)] text-[var(--accent-lime-text)] ring-2 ring-[var(--accent-lime)] ring-offset-1 ring-offset-[var(--bg-surface)] animate-pulse"
+                  ? "border-[var(--accent-lime)] bg-[var(--accent-lime)] text-[var(--accent-lime-text)] font-semibold"
                   : "border-[var(--border-color)] bg-[var(--bg-base)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--text-primary)]"
               }`}
             >
-              <Mic className={`w-3.5 h-3.5 ${isListening ? "animate-pulse" : ""}`} />
+              {isListening ? (
+                <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-lime-text)] animate-ping" />
+                  <span>Listening</span>
+                </>
+              ) : (
+                <Mic className="w-3.5 h-3.5" />
+              )}
             </button>
           )}
 
           <Button
-            id="ask-smartbudget-send-btn"
+            id="ask-yawabudget-send-btn"
             type="submit"
             isLoading={isLoading}
-            disabled={!prompt.trim() || isLoading}
+            disabled={!prompt.trim() || isLoading || isListening}
             size="sm"
-            className="h-8.5 px-3"
+            className="h-9 px-3 shrink-0"
             rightIcon={<Send className="w-3 h-3" />}
           >
             Send
           </Button>
         </div>
-
-        {/* Real-time Listening Active State Feedback */}
-        {isListening && (
-          <div className="flex items-center gap-2 px-1 text-[11px] font-mono text-[var(--accent-lime-text)] dark:text-[var(--accent-lime)]">
-            <span className="w-2 h-2 rounded-full bg-[var(--accent-lime)] animate-ping" />
-            <span>Listening to voice... Pausing speech or clicking the mic will submit your question.</span>
-          </div>
-        )}
       </form>
     </div>
   );

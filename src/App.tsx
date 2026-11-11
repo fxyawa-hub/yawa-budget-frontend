@@ -12,7 +12,6 @@ import { BudgetsPage } from "./pages/BudgetsPage";
 import { TransfersPage } from "./pages/TransfersPage";
 import { AskYawaBudgetPage } from "./pages/AskYawaBudgetPage";
 import { SettingsPage } from "./pages/SettingsPage";
-import { PortfolioPage } from "./pages/PortfolioPage";
 
 // Root redirector component based on authentication state
 const RootRedirect: React.FC = () => {
@@ -102,11 +101,8 @@ export default function App() {
               }
             />
 
-            {/* Root Developer Portfolio */}
-            <Route path="/" element={<PortfolioPage />} />
-            <Route path="/portfolio" element={<PortfolioPage />} />
-
-            {/* Unknown Route Fallback */}
+            {/* Root & Fallback Redirection */}
+            <Route path="/" element={<RootRedirect />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>

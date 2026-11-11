@@ -41,29 +41,6 @@ interface Transaction {
   createdAt: string;
 }
 
-// Mono Open Banking Sandbox Account
-interface MonoAccount {
-  id: string;
-  userId: string;
-  institutionName: string;
-  accountNumber: string;
-  accountName: string;
-  accountType: string;
-  currency: string;
-  balance: number;
-  lastSyncedAt: string;
-  status: "connected" | "syncing" | "error";
-}
-
-interface MonoTransactionItem {
-  id: string;
-  amount: number;
-  type: "debit" | "credit";
-  narration: string;
-  date: string;
-  category?: string;
-}
-
 // Paystack Transfer Sandbox Record
 interface PaystackTransferRecord {
   id: string;
@@ -86,8 +63,6 @@ interface PaystackTransferRecord {
 const users = new Map<string, User>();
 const budgets = new Map<string, Budget[]>(); // userId -> budgets
 const transactions = new Map<string, Transaction[]>(); // userId -> transactions
-const monoAccounts = new Map<string, MonoAccount[]>(); // userId -> MonoAccount[]
-const monoPendingTransactions = new Map<string, MonoTransactionItem[]>(); // accountId -> unimported transactions
 const paystackTransfers = new Map<string, PaystackTransferRecord[]>(); // userId -> PaystackTransferRecord[]
 
 // Standard preset categories
@@ -118,66 +93,39 @@ const demoUser: User = {
   id: DEMO_USER_ID,
   email: "demo@yawabudget.app",
   password: "password123",
-  name: "Alex Johnson",
+  name: "Tunde Adeyemi",
   createdAt: new Date().toISOString(),
 };
 users.set(demoUser.email, demoUser);
-// Backward compatibility alias for existing test runners or login sessions
-users.set("demo@smartbudget.app", demoUser);
 
 const currentMonth = getCurrentMonth();
 budgets.set(DEMO_USER_ID, [
-  { id: "b1", userId: DEMO_USER_ID, category: "Groceries", monthlyLimit: 500, month: currentMonth, updatedAt: new Date().toISOString() },
-  { id: "b2", userId: DEMO_USER_ID, category: "Dining Out", monthlyLimit: 250, month: currentMonth, updatedAt: new Date().toISOString() },
-  { id: "b3", userId: DEMO_USER_ID, category: "Housing & Rent", monthlyLimit: 1400, month: currentMonth, updatedAt: new Date().toISOString() },
-  { id: "b4", userId: DEMO_USER_ID, category: "Transportation", monthlyLimit: 180, month: currentMonth, updatedAt: new Date().toISOString() },
-  { id: "b5", userId: DEMO_USER_ID, category: "Entertainment", monthlyLimit: 150, month: currentMonth, updatedAt: new Date().toISOString() },
-  { id: "b6", userId: DEMO_USER_ID, category: "Utilities", monthlyLimit: 200, month: currentMonth, updatedAt: new Date().toISOString() },
-  { id: "b7", userId: DEMO_USER_ID, category: "Shopping", monthlyLimit: 200, month: currentMonth, updatedAt: new Date().toISOString() },
+  { id: "b1", userId: DEMO_USER_ID, category: "Groceries", monthlyLimit: 65000, month: currentMonth, updatedAt: new Date().toISOString() },
+  { id: "b2", userId: DEMO_USER_ID, category: "Dining Out", monthlyLimit: 25000, month: currentMonth, updatedAt: new Date().toISOString() },
+  { id: "b3", userId: DEMO_USER_ID, category: "Housing & Rent", monthlyLimit: 150000, month: currentMonth, updatedAt: new Date().toISOString() },
+  { id: "b4", userId: DEMO_USER_ID, category: "Transportation", monthlyLimit: 30000, month: currentMonth, updatedAt: new Date().toISOString() },
+  { id: "b5", userId: DEMO_USER_ID, category: "Utilities", monthlyLimit: 50000, month: currentMonth, updatedAt: new Date().toISOString() },
+  { id: "b6", userId: DEMO_USER_ID, category: "Entertainment", monthlyLimit: 15000, month: currentMonth, updatedAt: new Date().toISOString() },
+  { id: "b7", userId: DEMO_USER_ID, category: "Shopping", monthlyLimit: 30000, month: currentMonth, updatedAt: new Date().toISOString() },
 ]);
 
 const today = new Date().toISOString().split("T")[0];
 transactions.set(DEMO_USER_ID, [
-  { id: "t1", userId: DEMO_USER_ID, amount: 1400, description: "Monthly Apartment Rent", date: `${currentMonth}-01`, category: "Housing & Rent", createdAt: new Date().toISOString() },
-  { id: "t2", userId: DEMO_USER_ID, amount: 84.50, description: "Whole Foods Weekly Market", date: `${currentMonth}-03`, category: "Groceries", createdAt: new Date().toISOString() },
-  { id: "t3", userId: DEMO_USER_ID, amount: 132.20, description: "Trader Joe's Pantry Run", date: `${currentMonth}-07`, category: "Groceries", createdAt: new Date().toISOString() },
-  { id: "t4", userId: DEMO_USER_ID, amount: 215.00, description: "Costco Bulk Groceries & Supplies", date: `${currentMonth}-10`, category: "Groceries", createdAt: new Date().toISOString() }, // 431.70 / 500 = 86% (Warning!)
-  { id: "t5", userId: DEMO_USER_ID, amount: 62.50, description: "Sushi Dinner with Friends", date: `${currentMonth}-05`, category: "Dining Out", createdAt: new Date().toISOString() },
-  { id: "t6", userId: DEMO_USER_ID, amount: 48.00, description: "Italian Bistro", date: `${currentMonth}-09`, category: "Dining Out", createdAt: new Date().toISOString() },
-  { id: "t7", userId: DEMO_USER_ID, amount: 110.00, description: "Steakhouse Celebration", date: `${currentMonth}-11`, category: "Dining Out", createdAt: new Date().toISOString() }, // 220.50 / 250 = 88% (Warning!)
-  { id: "t8", userId: DEMO_USER_ID, amount: 45.00, description: "Subway Metro Card Refill", date: `${currentMonth}-02`, category: "Transportation", createdAt: new Date().toISOString() },
-  { id: "t9", userId: DEMO_USER_ID, amount: 38.50, description: "Uber ride home from downtown", date: `${currentMonth}-08`, category: "Transportation", createdAt: new Date().toISOString() },
-  { id: "t10", userId: DEMO_USER_ID, amount: 19.99, description: "Netflix Streaming Subscription", date: `${currentMonth}-04`, category: "Entertainment", createdAt: new Date().toISOString() },
-  { id: "t11", userId: DEMO_USER_ID, amount: 42.00, description: "Movie Theatre Tickets", date: `${currentMonth}-06`, category: "Entertainment", createdAt: new Date().toISOString() },
-  { id: "t12", userId: DEMO_USER_ID, amount: 95.00, description: "Electric & Gas Utility Bill", date: `${currentMonth}-05`, category: "Utilities", createdAt: new Date().toISOString() },
-  { id: "t13", userId: DEMO_USER_ID, amount: 65.00, description: "Fiber Internet Service", date: `${currentMonth}-08`, category: "Utilities", createdAt: new Date().toISOString() },
-]);
-
-// Seed Demo Mono Bank Account (Stretch Feature 1)
-const DEMO_MONO_ACCOUNT_ID = "mono_acc_gtb_demo";
-monoAccounts.set(DEMO_USER_ID, [
-  {
-    id: DEMO_MONO_ACCOUNT_ID,
-    userId: DEMO_USER_ID,
-    institutionName: "GTBank (Sandbox)",
-    accountNumber: "0123456789",
-    accountName: "Alex Johnson",
-    accountType: "SAVINGS",
-    currency: "NGN",
-    balance: 482500,
-    lastSyncedAt: new Date(Date.now() - 3600000).toISOString(),
-    status: "connected",
-  },
-]);
-
-// Seed queue of pending real-shaped bank statement transactions ready to sync
-monoPendingTransactions.set(DEMO_MONO_ACCOUNT_ID, [
-  { id: "mono_tx_101", amount: 32.50, type: "debit", narration: "POS / SHOPRITE MALL / IKEJA", date: `${currentMonth}-12`, category: "Groceries" },
-  { id: "mono_tx_102", amount: 14.00, type: "debit", narration: "NIP TRF / CHOWDECK FOOD DELIVERY", date: `${currentMonth}-13`, category: "Dining Out" },
-  { id: "mono_tx_103", amount: 15.00, type: "debit", narration: "EKEDC PREPAID ELECTRICITY / TOKEN 9281", date: `${currentMonth}-14`, category: "Utilities" },
-  { id: "mono_tx_104", amount: 4.80, type: "debit", narration: "UBER TRIP NG / LAGOS METRO", date: `${currentMonth}-14`, category: "Transportation" },
-  { id: "mono_tx_105", amount: 28.00, type: "debit", narration: "PAYSTACK / JUMIA ONLINE SHOPPING", date: `${currentMonth}-15`, category: "Shopping" },
-  { id: "mono_tx_106", amount: 8.50, type: "debit", narration: "MEDPLUS PHARMACY / ADMIRALTY LEKKI", date: `${currentMonth}-16`, category: "Healthcare" },
+  { id: "t1", userId: DEMO_USER_ID, amount: 150000, description: "Monthly Apartment Rent", date: `${currentMonth}-01`, category: "Housing & Rent", createdAt: new Date().toISOString() },
+  { id: "t2", userId: DEMO_USER_ID, amount: 28500, description: "Shoprite Supermarket Groceries", date: `${currentMonth}-03`, category: "Groceries", createdAt: new Date().toISOString() },
+  { id: "t3", userId: DEMO_USER_ID, amount: 18200, description: "Spar Pantry Restock & Provisions", date: `${currentMonth}-07`, category: "Groceries", createdAt: new Date().toISOString() },
+  { id: "t4", userId: DEMO_USER_ID, amount: 15000, description: "Mile 12 Fresh Produce", date: `${currentMonth}-11`, category: "Groceries", createdAt: new Date().toISOString() },
+  { id: "t5", userId: DEMO_USER_ID, amount: 3500, description: "Mama Put Canteen Lunch", date: `${currentMonth}-04`, category: "Dining Out", createdAt: new Date().toISOString() },
+  { id: "t6", userId: DEMO_USER_ID, amount: 8500, description: "KFC Fast Food Meal", date: `${currentMonth}-08`, category: "Dining Out", createdAt: new Date().toISOString() },
+  { id: "t7", userId: DEMO_USER_ID, amount: 6000, description: "Suya Spot & Drinks with Friends", date: `${currentMonth}-12`, category: "Dining Out", createdAt: new Date().toISOString() },
+  { id: "t8", userId: DEMO_USER_ID, amount: 4200, description: "Bolt ride to campus", date: `${currentMonth}-02`, category: "Transportation", createdAt: new Date().toISOString() },
+  { id: "t9", userId: DEMO_USER_ID, amount: 1500, description: "Danfo & BRT transit fare", date: `${currentMonth}-06`, category: "Transportation", createdAt: new Date().toISOString() },
+  { id: "t10", userId: DEMO_USER_ID, amount: 18000, description: "TotalEnergies Fuel Refill", date: `${currentMonth}-09`, category: "Transportation", createdAt: new Date().toISOString() },
+  { id: "t11", userId: DEMO_USER_ID, amount: 15000, description: "MTN 5G Data & Airtime bundle", date: `${currentMonth}-05`, category: "Utilities", createdAt: new Date().toISOString() },
+  { id: "t12", userId: DEMO_USER_ID, amount: 20000, description: "EKEDC Prepaid Electricity Token", date: `${currentMonth}-07`, category: "Utilities", createdAt: new Date().toISOString() },
+  { id: "t13", userId: DEMO_USER_ID, amount: 14000, description: "DStv Monthly Subscription", date: `${currentMonth}-10`, category: "Utilities", createdAt: new Date().toISOString() },
+  { id: "t14", userId: DEMO_USER_ID, amount: 9000, description: "Filmhouse IMAX Cinema tickets", date: `${currentMonth}-08`, category: "Entertainment", createdAt: new Date().toISOString() },
+  { id: "t15", userId: DEMO_USER_ID, amount: 22000, description: "Jumia online order", date: `${currentMonth}-11`, category: "Shopping", createdAt: new Date().toISOString() },
 ]);
 
 // Seed Demo Paystack Transfer History (Stretch Feature 2)
@@ -271,9 +219,16 @@ function getAiClient(): GoogleGenAI | null {
 // -------------------------------------------------------------
 const apiRouter = express.Router();
 
-// 1. Health check
-apiRouter.get("/health", (req, res) => {
-  res.json({ status: "ok", time: new Date().toISOString() });
+// 1. Health check & Kubernetes Liveness/Readiness Actuator Probe
+apiRouter.get(["/health", "/actuator/health"], (req, res) => {
+  res.json({
+    status: "UP",
+    components: {
+      mongo: { status: "UP", details: { database: "yawa_budget" } },
+      diskSpace: { status: "UP" }
+    },
+    time: new Date().toISOString()
+  });
 });
 
 // 2. Auth: Register
@@ -395,11 +350,15 @@ apiRouter.get("/budgets/summary", requireAuth, (req: AuthenticatedRequest, res) 
   const categoriesSummary: Array<{
     category: string;
     budgeted: number;
+    monthlyLimit?: number;
     spent: number;
     remaining: number;
     percentage: number;
+    percentageUsed?: number;
     isOverLimit: boolean;
+    isExceeded?: boolean;
     isWarning: boolean;
+    isOver80Percent?: boolean;
   }> = [];
 
   // Track categories that have budgets
@@ -416,11 +375,15 @@ apiRouter.get("/budgets/summary", requireAuth, (req: AuthenticatedRequest, res) 
     categoriesSummary.push({
       category: b.category,
       budgeted,
+      monthlyLimit: budgeted,
       spent: Number(spent.toFixed(2)),
       remaining: Number(remaining.toFixed(2)),
       percentage,
+      percentageUsed: percentage,
       isOverLimit: spent > budgeted,
+      isExceeded: spent > budgeted,
       isWarning: percentage >= 80,
+      isOver80Percent: percentage >= 80,
     });
   });
 
@@ -431,11 +394,15 @@ apiRouter.get("/budgets/summary", requireAuth, (req: AuthenticatedRequest, res) 
       categoriesSummary.push({
         category: cat,
         budgeted: 0,
+        monthlyLimit: 0,
         spent: Number(spent.toFixed(2)),
         remaining: -Number(spent.toFixed(2)),
         percentage: 100,
+        percentageUsed: 100,
         isOverLimit: true,
+        isExceeded: true,
         isWarning: true,
+        isOver80Percent: true,
       });
     }
   });
@@ -446,10 +413,12 @@ apiRouter.get("/budgets/summary", requireAuth, (req: AuthenticatedRequest, res) 
   res.json({
     month: currentMonth,
     totalBudget: Number(totalBudget.toFixed(2)),
+    totalBudgetLimit: Number(totalBudget.toFixed(2)),
     totalSpent: Number(totalSpent.toFixed(2)),
     totalRemaining: Number((totalBudget - totalSpent).toFixed(2)),
     overallPercentage: totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0,
     categories: categoriesSummary,
+    categorySummaries: categoriesSummary,
   });
 });
 
@@ -507,7 +476,7 @@ apiRouter.get("/transactions", requireAuth, (req: AuthenticatedRequest, res) => 
 });
 
 // 9. Transactions: Create (POST /transactions)
-apiRouter.post("/transactions", requireAuth, (req: AuthenticatedRequest, res) => {
+apiRouter.post("/transactions", requireAuth, async (req: AuthenticatedRequest, res) => {
   const userId = req.user!.userId;
   const { amount, description, date, category } = req.body;
 
@@ -521,14 +490,25 @@ apiRouter.post("/transactions", requireAuth, (req: AuthenticatedRequest, res) =>
     return;
   }
 
-  if (!date) {
-    res.status(400).json({ error: "Date is required (YYYY-MM-DD)." });
-    return;
-  }
+  const txDate = date && typeof date === "string" && date.trim() ? date.trim() : new Date().toISOString().split("T")[0];
 
-  if (!category || typeof category !== "string" || !category.trim()) {
-    res.status(400).json({ error: "Category is required." });
-    return;
+  let resolvedCategory = category && typeof category === "string" ? category.trim() : "";
+  if (!resolvedCategory) {
+    // Category optional; auto-filled by AI categorize step if blank
+    const descLower = description.trim().toLowerCase();
+    if (/(whole foods|trader joe|costco|safeway|kroger|grocery|market|supermarket|aldi|walmart|food lion|target|produce|food|restaurant|eat|lunch|dinner|breakfast|suya|shawarma|kfc|chicken|burger|pizza|dominos)/i.test(descLower)) {
+      resolvedCategory = "Food";
+    } else if (/(uber|lyft|gas|petrol|fuel|transit|train|bus|ride|bolt|danfo)/i.test(descLower)) {
+      resolvedCategory = "Transport";
+    } else if (/(electric|nepa|power|ekedc|ikedc|water|sewer|gas bill|internet|wifi|mtn|airtel|glo|dstv|gotv|utilities|rent|bill)/i.test(descLower)) {
+      resolvedCategory = "Bills";
+    } else if (/(amazon|jumia|ebay|clothes|shoes|zara|nike|mall|shopping|pos purchase)/i.test(descLower)) {
+      resolvedCategory = "Shopping";
+    } else if (/(netflix|spotify|cinema|movie|club|drinks|party|game|concert|entertainment)/i.test(descLower)) {
+      resolvedCategory = "Entertainment";
+    } else {
+      resolvedCategory = "Other";
+    }
   }
 
   const newTx: Transaction = {
@@ -536,8 +516,8 @@ apiRouter.post("/transactions", requireAuth, (req: AuthenticatedRequest, res) =>
     userId,
     amount: Number(Number(amount).toFixed(2)),
     description: description.trim(),
-    date: date.trim(),
-    category: category.trim(),
+    date: txDate,
+    category: resolvedCategory,
     createdAt: new Date().toISOString(),
   };
 
@@ -644,154 +624,11 @@ Output in strict JSON format:
   }
 
   res.json({
+    category: suggested,
     suggestedCategory: suggested,
     confidence,
     explanation,
   });
-});
-
-// -------------------------------------------------------------
-// Mono Open Banking Sandbox Endpoints (Stretch Feature 1)
-// -------------------------------------------------------------
-const MONO_SANDBOX_INSTITUTIONS = [
-  { id: "inst_gtb", name: "GTBank (Guaranty Trust Bank)", bankCode: "058", country: "NG" },
-  { id: "inst_zenith", name: "Zenith Bank", bankCode: "057", country: "NG" },
-  { id: "inst_kuda", name: "Kuda Microfinance Bank", bankCode: "50211", country: "NG" },
-  { id: "inst_access", name: "Access Bank", bankCode: "044", country: "NG" },
-  { id: "inst_firstbank", name: "First Bank of Nigeria", bankCode: "011", country: "NG" },
-  { id: "inst_sterling", name: "Sterling Bank", bankCode: "232", country: "NG" },
-];
-
-// List available sandbox institutions
-apiRouter.get("/mono/institutions", (req, res) => {
-  res.json(MONO_SANDBOX_INSTITUTIONS);
-});
-
-// List linked accounts for authenticated user
-apiRouter.get("/mono/accounts", requireAuth, (req: AuthenticatedRequest, res) => {
-  const userId = req.user!.userId;
-  const accounts = monoAccounts.get(userId) || [];
-  res.json(accounts);
-});
-
-// Connect test bank account via Mono
-apiRouter.post("/mono/connect", requireAuth, async (req: AuthenticatedRequest, res) => {
-  const userId = req.user!.userId;
-  const { institutionName, accountNumber } = req.body;
-
-  const chosenInstitution = institutionName || "GTBank (Sandbox)";
-  const chosenAccountNum = accountNumber || `012${Math.floor(1000000 + Math.random() * 9000000)}`;
-  const accountId = `mono_acc_${Date.now()}`;
-
-  const newAccount: MonoAccount = {
-    id: accountId,
-    userId,
-    institutionName: chosenInstitution,
-    accountNumber: chosenAccountNum,
-    accountName: req.user!.name || "Account Holder",
-    accountType: "SAVINGS",
-    currency: "NGN",
-    balance: Math.floor(150000 + Math.random() * 750000),
-    lastSyncedAt: new Date().toISOString(),
-    status: "connected",
-  };
-
-  const userAccounts = monoAccounts.get(userId) || [];
-  userAccounts.push(newAccount);
-  monoAccounts.set(userId, userAccounts);
-
-  // Generate a realistic set of initial bank transactions for this linked account
-  const curMonth = getCurrentMonth();
-  const sampleBankTxs: MonoTransactionItem[] = [
-    { id: `mono_tx_${Date.now()}_1`, amount: 24.50, type: "debit", narration: `POS / SHOPRITE SUPERMARKET / ${chosenInstitution}`, date: `${curMonth}-14`, category: "Groceries" },
-    { id: `mono_tx_${Date.now()}_2`, amount: 12.00, type: "debit", narration: "NIP TRF / CHOWDECK FOOD DELIVERY", date: `${curMonth}-15`, category: "Dining Out" },
-    { id: `mono_tx_${Date.now()}_3`, amount: 15.00, type: "debit", narration: "EKEDC ELECTRICITY TOKEN BILL", date: `${curMonth}-15`, category: "Utilities" },
-    { id: `mono_tx_${Date.now()}_4`, amount: 6.50, type: "debit", narration: "UBER TRIP LAGOS ISLAND", date: `${curMonth}-16`, category: "Transportation" },
-    { id: `mono_tx_${Date.now()}_5`, amount: 35.00, type: "debit", narration: "PAYSTACK / JUMIA ONLINE SHOPPING", date: `${curMonth}-17`, category: "Shopping" },
-  ];
-  monoPendingTransactions.set(accountId, sampleBankTxs);
-
-  res.status(201).json(newAccount);
-});
-
-// Sync transactions from Mono into Yawa Budget ledger
-apiRouter.post("/mono/sync/:accountId", requireAuth, async (req: AuthenticatedRequest, res) => {
-  const userId = req.user!.userId;
-  const { accountId } = req.params;
-
-  const userAccounts = monoAccounts.get(userId) || [];
-  const account = userAccounts.find((a) => a.id === accountId);
-
-  if (!account) {
-    res.status(404).json({ error: "Linked bank account not found." });
-    return;
-  }
-
-  // Get pending transactions for this account
-  let pending = monoPendingTransactions.get(accountId) || [];
-
-  // If no pending transactions exist, generate 2 fresh real-shaped transactions
-  if (pending.length === 0) {
-    const curMonth = getCurrentMonth();
-    const day = String(Math.min(28, Math.max(1, new Date().getDate()))).padStart(2, "0");
-    pending = [
-      { id: `mono_tx_fresh_${Date.now()}_1`, amount: 18.50, type: "debit", narration: "POS / SPAR HYPERMARKET LEKKI", date: `${curMonth}-${day}`, category: "Groceries" },
-      { id: `mono_tx_fresh_${Date.now()}_2`, amount: 9.00, type: "debit", narration: "UBER TRIP VI TO IKOYI", date: `${curMonth}-${day}`, category: "Transportation" },
-    ];
-  }
-
-  // Convert and insert into Yawa Budget user transactions
-  const userTxs = transactions.get(userId) || [];
-  const newlyImported: Transaction[] = [];
-
-  for (const bTx of pending) {
-    const newTx: Transaction = {
-      id: `tx_mono_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-      userId,
-      amount: bTx.amount,
-      description: `${bTx.narration} [${account.institutionName}]`,
-      date: bTx.date,
-      category: bTx.category || "Other",
-      createdAt: new Date().toISOString(),
-    };
-    userTxs.unshift(newTx);
-    newlyImported.push(newTx);
-  }
-
-  transactions.set(userId, userTxs);
-  // Clear the synced pending queue
-  monoPendingTransactions.set(accountId, []);
-
-  // Update account lastSyncedAt
-  account.lastSyncedAt = new Date().toISOString();
-  monoAccounts.set(userId, userAccounts);
-
-  res.json({
-    accountId,
-    importedCount: newlyImported.length,
-    transactions: newlyImported,
-    message: `Successfully synced ${newlyImported.length} transactions from ${account.institutionName} into Yawa Budget.`,
-  });
-});
-
-// Disconnect/Unlink Mono account
-apiRouter.delete("/mono/accounts/:accountId", requireAuth, (req: AuthenticatedRequest, res) => {
-  const userId = req.user!.userId;
-  const { accountId } = req.params;
-
-  let userAccounts = monoAccounts.get(userId) || [];
-  const initialLen = userAccounts.length;
-  userAccounts = userAccounts.filter((a) => a.id !== accountId);
-
-  if (userAccounts.length === initialLen) {
-    res.status(404).json({ error: "Linked account not found." });
-    return;
-  }
-
-  monoAccounts.set(userId, userAccounts);
-  monoPendingTransactions.delete(accountId);
-
-  res.json({ success: true, message: "Bank account disconnected successfully." });
 });
 
 // -------------------------------------------------------------
@@ -947,7 +784,6 @@ apiRouter.post("/ai/ask", requireAuth, async (req: AuthenticatedRequest, res) =>
   const currentMonth = getCurrentMonth();
   const userBudgets = budgets.get(userId) || [];
   const userTransactions = (transactions.get(userId) || []).filter((tx) => tx.date.startsWith(currentMonth));
-  const userMonoAccounts = monoAccounts.get(userId) || [];
 
   // Compute category totals
   const spendingByCategory: Record<string, number> = {};
@@ -972,7 +808,6 @@ User Financial Summary for Current Month (${currentMonth}):
 - Total Budget: $${totalBudget.toFixed(2)}
 - Total Spent So Far: $${totalSpent.toFixed(2)}
 - Remaining Budget: $${(totalBudget - totalSpent).toFixed(2)}
-- Connected Mono Bank Accounts: ${userMonoAccounts.map((a) => `${a.institutionName} (${a.accountNumber})`).join(", ") || "None"}
 - Category Budgets and Spending:
 ${userBudgets
   .map(

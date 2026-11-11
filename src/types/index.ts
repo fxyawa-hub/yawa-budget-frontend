@@ -90,10 +90,6 @@ export interface AskYawaBudgetResponse {
   answer: string;
 }
 
-// Backward-compatibility aliases
-export type AskSmartBudgetPayload = AskYawaBudgetPayload;
-export type AskSmartBudgetResponse = AskYawaBudgetResponse;
-
 export interface ChatMessageItem {
   id: string;
   sender: "user" | "assistant";
@@ -103,46 +99,6 @@ export interface ChatMessageItem {
 
 export interface ApiErrorResponse {
   error: string;
-}
-
-// -------------------------------------------------------------
-// Mono Open Banking Sandbox Types (Stretch Feature 1)
-// -------------------------------------------------------------
-export interface MonoInstitution {
-  id: string;
-  name: string;
-  bankCode: string;
-  icon?: string;
-  country: string;
-}
-
-export interface MonoAccount {
-  id: string;
-  userId: string;
-  institutionName: string;
-  accountNumber: string;
-  accountName: string;
-  accountType: string;
-  currency: string;
-  balance: number;
-  lastSyncedAt: string;
-  status: "connected" | "syncing" | "error";
-}
-
-export interface MonoBankTransaction {
-  id: string;
-  amount: number;
-  type: "debit" | "credit";
-  narration: string;
-  date: string;
-  category?: string;
-}
-
-export interface MonoSyncResponse {
-  accountId: string;
-  importedCount: number;
-  transactions: Transaction[];
-  message: string;
 }
 
 // -------------------------------------------------------------
